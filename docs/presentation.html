@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI-Powered Internal Chatbot — Our Organization</title>
+<style>
+  :root {
+    --primary: #0D47A1;
+    --accent:  #1A73E8;
+    --bright:  #42A5F5;
+    --gold:    #FFC107;
+    --green:   #00897B;
+    --white:   #FFFFFF;
+    --offwhite:#F8FAFF;
+    --dark:    #0A1628;
+    --mid:     #1E3A5F;
+    --text:    #1A2332;
+    --muted:   #546E8A;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #0A1628; overflow: hidden; }
+
+  .deck { width: 100vw; height: 100vh; position: relative; }
+  .slide {
+    width: 100%; height: 100%;
+    position: absolute; top: 0; left: 0;
+    display: none; flex-direction: column;
+    justify-content: center; align-items: center;
+    padding: 0;
+    transition: opacity 0.4s ease;
+  }
+  .slide.active { display: flex; }
+
+  /* Navigation */
+  .nav {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 8px; z-index: 100; align-items: center;
+  }
+  .nav button {
+    background: rgba(255,255,255,0.15); color: #fff;
+    border: 1px solid rgba(255,255,255,0.3); border-radius: 6px;
+    padding: 8px 20px; cursor: pointer; font-size: 14px; font-weight: 600;
+    transition: all 0.2s; backdrop-filter: blur(8px);
+  }
+  .nav button:hover { background: rgba(255,255,255,0.28); }
+  .nav .counter { color: rgba(255,255,255,0.6); font-size: 13px; min-width: 60px; text-align: center; }
+  .progress {
+    position: fixed; top: 0; left: 0; height: 3px;
+    background: linear-gradient(90deg, #42A5F5, #FFC107);
+    transition: width 0.4s ease; z-index: 100;
+  }
+
+  /* ── SLIDE TYPES ─────────────────────────────────────── */
+
+  /* Cover */
+  .s-cover {
+    background: linear-gradient(135deg, #0A1628 0%, #0D2D5C 50%, #0A1628 100%);
+  }
+  .s-cover .eyebrow {
+    font-size: 13px; letter-spacing: 4px; color: #42A5F5;
+    text-transform: uppercase; font-weight: 600; margin-bottom: 20px;
+  }
+  .s-cover h1 {
+    font-size: clamp(32px, 4vw, 52px); font-weight: 800;
+    color: #fff; text-align: center; line-height: 1.15; max-width: 900px;
+    margin-bottom: 12px;
+  }
+  .s-cover h1 span { color: #42A5F5; }
+  .s-cover .sub {
+    font-size: 18px; color: rgba(255,255,255,0.6); text-align: center;
+    max-width: 700px; line-height: 1.6; margin-bottom: 40px;
+  }
+  .s-cover .tags {
+    display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;
+    margin-bottom: 48px;
+  }
+  .s-cover .tag {
+    background: rgba(66,165,245,0.15); color: #42A5F5;
+    border: 1px solid rgba(66,165,245,0.35); border-radius: 20px;
+    padding: 6px 16px; font-size: 13px; font-weight: 600;
+  }
+  .s-cover .byline {
+    font-size: 13px; color: rgba(255,255,255,0.35); font-style: italic;
+  }
+  .star-bg {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background-image: radial-gradient(circle, rgba(255,255,255,0.08) 1px, transparent 1px);
+    background-size: 48px 48px; pointer-events: none;
+  }
+  .cover-glow {
+    position: absolute; width: 600px; height: 600px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(26,115,232,0.18) 0%, transparent 70%);
+    top: 50%; left: 50%; transform: translate(-50%,-50%); pointer-events: none;
+  }
+
+  /* Section divider */
+  .s-divider {
+    background: linear-gradient(135deg, #0D2D5C 0%, #0A1628 100%);
+    text-align: center;
+  }
+  .s-divider .num {
+    font-size: 80px; font-weight: 900; color: rgba(26,115,232,0.2);
+    line-height: 1; margin-bottom: 8px;
+  }
+  .s-divider h2 {
+    font-size: clamp(28px, 3.5vw, 44px); font-weight: 800;
+    color: #fff; margin-bottom: 12px;
+  }
+  .s-divider .desc {
+    font-size: 18px; color: rgba(255,255,255,0.5); max-width: 600px;
+  }
+  .s-divider .line {
+    width: 60px; height: 4px;
+    background: linear-gradient(90deg, #42A5F5, #FFC107);
+    margin: 20px auto 20px; border-radius: 2px;
+  }
+
+  /* Light content slides */
+  .s-light {
+    background: #F0F5FF;
+    padding: 48px 60px;
+    align-items: flex-start;
+    justify-content: flex-start;
+  }
+  .s-light .slide-title {
+    font-size: 14px; font-weight: 700; letter-spacing: 3px;
+    text-transform: uppercase; color: #1A73E8; margin-bottom: 10px;
+  }
+  .s-light h2 {
+    font-size: clamp(24px, 2.8vw, 36px); font-weight: 800;
+    color: #0D47A1; margin-bottom: 28px; line-height: 1.2;
+  }
+
+  /* Dark content slides */
+  .s-dark {
+    background: #0A1628;
+    padding: 48px 60px;
+    align-items: flex-start;
+    justify-content: flex-start;
+  }
+  .s-dark .slide-title {
+    font-size: 13px; font-weight: 700; letter-spacing: 3px;
+    text-transform: uppercase; color: #42A5F5; margin-bottom: 10px;
+  }
+  .s-dark h2 {
+    font-size: clamp(24px, 2.8vw, 36px); font-weight: 800;
+    color: #fff; margin-bottom: 28px; line-height: 1.2;
+  }
+
+  /* Cards grid */
+  .cards { display: grid; gap: 16px; width: 100%; }
+  .cards.cols-2 { grid-template-columns: 1fr 1fr; }
+  .cards.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .cards.cols-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+
+  .card {
+    border-radius: 12px; padding: 20px 22px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  .card.light {
+    background: #fff; border: 1px solid #e0e8f8;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+  .card .icon { font-size: 28px; margin-bottom: 10px; }
+  .card .ctitle {
+    font-size: 15px; font-weight: 700;
+    color: #fff; margin-bottom: 6px;
+  }
+  .card.light .ctitle { color: #0D47A1; }
+  .card .cdesc {
+    font-size: 13px; color: rgba(255,255,255,0.55); line-height: 1.5;
+  }
+  .card.light .cdesc { color: #546E8A; }
+  .card .cbadge {
+    display: inline-block; margin-top: 10px;
+    background: rgba(66,165,245,0.15); color: #42A5F5;
+    border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 600;
+  }
+  .card.light .cbadge { background: #E3F2FD; color: #1565C0; }
+
+  /* Metric blocks */
+  .metrics { display: flex; gap: 20px; width: 100%; }
+  .metric {
+    flex: 1; border-radius: 12px; padding: 24px;
+    text-align: center;
+  }
+  .metric .mval {
+    font-size: 42px; font-weight: 900; line-height: 1;
+    margin-bottom: 6px;
+  }
+  .metric .mlabel { font-size: 13px; font-weight: 600; opacity: 0.7; }
+
+  /* Flow diagram */
+  .flow { display: flex; align-items: center; gap: 0; width: 100%; flex-wrap: nowrap; }
+  .flow-box {
+    border-radius: 10px; padding: 14px 16px; text-align: center;
+    min-width: 0; flex: 1;
+  }
+  .flow-arrow { color: rgba(255,255,255,0.35); font-size: 20px; flex-shrink: 0; padding: 0 4px; }
+  .flow-box .fb-icon { font-size: 22px; margin-bottom: 6px; }
+  .flow-box .fb-title { font-size: 12px; font-weight: 700; color: #fff; }
+  .flow-box .fb-sub { font-size: 10px; color: rgba(255,255,255,0.5); margin-top: 3px; }
+
+  /* Table */
+  .dtable { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .dtable th {
+    background: #0D47A1; color: #fff; padding: 10px 14px;
+    text-align: left; font-weight: 700; font-size: 12px; letter-spacing: 1px;
+  }
+  .dtable td { padding: 9px 14px; border-bottom: 1px solid rgba(0,0,0,0.06); color: #2C3E50; }
+  .dtable tr:nth-child(even) td { background: #F0F5FF; }
+  .dtable tr:nth-child(odd) td { background: #fff; }
+
+  /* Two-col layout */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; width: 100%; }
+  .two-col.wide { grid-template-columns: 3fr 2fr; }
+  .two-col.wider { grid-template-columns: 2fr 3fr; }
+
+  /* Code block */
+  .code-block {
+    background: #0D1117; border-radius: 10px; padding: 18px 22px;
+    border: 1px solid rgba(66,165,245,0.25); width: 100%;
+    font-family: 'Courier New', monospace; font-size: 13px;
+    color: #D4D4D4; line-height: 1.6;
+  }
+  .code-block .ck { color: #569CD6; }
+  .code-block .cs { color: #CE9178; }
+  .code-block .cc { color: #6A9955; }
+  .code-block .ca { color: #9CDCFE; }
+
+  /* Quote */
+  .quote-box {
+    border-left: 4px solid #42A5F5; padding: 16px 20px;
+    background: rgba(66,165,245,0.08); border-radius: 0 8px 8px 0;
+  }
+  .quote-box p { font-size: 16px; color: rgba(255,255,255,0.85); font-style: italic; line-height: 1.6; }
+  .quote-box .attr { font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 8px; font-style: normal; }
+
+  /* Timeline steps */
+  .steps { display: flex; flex-direction: column; gap: 12px; width: 100%; }
+  .step { display: flex; align-items: flex-start; gap: 14px; }
+  .step-num {
+    width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 14px; color: #fff;
+    background: linear-gradient(135deg, #1A73E8, #42A5F5);
+  }
+  .step-content .st { font-size: 14px; font-weight: 700; color: #fff; }
+  .step-content .sd { font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 2px; }
+
+  /* Conclusion */
+  .s-conclusion {
+    background: linear-gradient(135deg, #0A1628 0%, #0D2D5C 60%, #0A1628 100%);
+    text-align: center;
+  }
+
+  /* Pill badges */
+  .pills { display: flex; gap: 8px; flex-wrap: wrap; }
+  .pill {
+    padding: 5px 14px; border-radius: 20px; font-size: 12px; font-weight: 600;
+  }
+
+  /* Arch diagram */
+  .arch { width: 100%; }
+  .arch-row { display: flex; gap: 10px; margin-bottom: 10px; }
+  .arch-box {
+    flex: 1; border-radius: 8px; padding: 12px 14px;
+    border: 1px solid; font-size: 12px;
+  }
+  .arch-box .at { font-weight: 700; margin-bottom: 3px; font-size: 13px; }
+  .arch-box .as { opacity: 0.7; font-size: 11px; }
+
+</style>
+</head>
+<body>
+
+<div class="deck" id="deck">
+  <div class="progress" id="progress"></div>
+
+  <!-- ═══ SLIDE 1: COVER ═══ -->
+  <div class="slide s-cover active">
+    <div class="star-bg"></div>
+    <div class="cover-glow"></div>
+    <div style="position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;text-align:center;padding:40px;">
+      <div class="eyebrow">Our Organization · Internal AI Innovation</div>
+      <h1>AI-Powered Internal <span>Chatbot</span><br>on Google Cloud</h1>
+      <div class="sub">From conversational questions to live operational data — an embeddable AI assistant built on MCP Server, Vertex AI, and RAG</div>
+      <div class="tags">
+        <span class="tag">MCP Server</span>
+        <span class="tag">Vertex AI · Gemini</span>
+        <span class="tag">RAG</span>
+        <span class="tag">PostgreSQL</span>
+        <span class="tag">Spring Boot</span>
+        <span class="tag">Cloud Run</span>
+        <span class="tag">Embeddable Widget</span>
+      </div>
+      <div class="byline">Designed by Curiosity. Built by Discipline. Delivered by Nirav Mehta.</div>
+    </div>
+  </div>
+
+  <!-- ═══ SLIDE 2: THE PROBLEM ═══ -->
+  <div class="slide s-dark">
+    <div class="slide-title">The Problem</div>
+    <h2>Every Organization Drowns in Its Own Language</h2>
+    <div class="cards cols-2">
+      <div class="card">
+        <div class="icon">❓</div>
+        <div class="ctitle">Acronym Overload</div>
+        <div class="cdesc">New team members spend weeks decoding SLAs, KPIs, MTTR, RBAC — terms that exist only in tribal knowledge or buried wikis.</div>
+      </div>
+      <div class="card">
+        <div class="icon">📊</div>
+        <div class="ctitle">Data Requires SQL Expertise</div>
+        <div class="cdesc">Operational insights live in databases. Business stakeholders depend on engineering to pull reports. Dashboards are static. Questions go unanswered.</div>
+      </div>
+      <div class="card">
+        <div class="icon">🔁</div>
+        <div class="ctitle">Repeated Interruptions</div>
+        <div class="cdesc">Senior engineers get asked the same onboarding questions repeatedly. Every interruption costs focus time that could go to building.</div>
+      </div>
+      <div class="card">
+        <div class="icon">🏝️</div>
+        <div class="ctitle">Knowledge Silos</div>
+        <div class="cdesc">Critical institutional knowledge lives in people's heads. When they leave, it leaves too. Documentation exists but is never where you need it.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ SLIDE 3: THE SOLUTION ═══ -->
+  <div class="slide s-cover">
+    <div class="star-bg"></div>
+    <div style="position:relative;z-index:1;text-align:center;padding:48px;">
+      <div class="eyebrow">The Solution</div>
+      <h1 style="font-size:clamp(28px,3.5vw,46px);margin-bottom:24px;">One Script Tag.<br><span>Infinite Organizational Knowledge.</span></h1>
+      <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(66,165,245,0.3);border-radius:14px;padding:28px 36px;max-width:720px;margin:0 auto 32px;font-family:'Courier New',monospace;font-size:15px;color:#D4D4D4;text-align:left;line-height:2;">
+        &lt;<span style="color:#4EC9B0;">script</span><br>
+        &nbsp;&nbsp;<span style="color:#9CDCFE;">src</span>=<span style="color:#CE9178;">"chatbot-widget.js"</span><br>
+        &nbsp;&nbsp;<span style="color:#9CDCFE;">data-api-url</span>=<span style="color:#CE9178;">"https://chatbot-api.run.app/api/chat"</span><br>
+        &nbsp;&nbsp;<span style="color:#9CDCFE;">data-title</span>=<span style="color:#CE9178;">"AI Assistant"</span><br>
+        &nbsp;&nbsp;<span style="color:#9CDCFE;">defer</span><br>
+        &gt;&lt;/<span style="color:#4EC9B0;">script</span>&gt;
+      </div>
+      <div style="color:rgba(255,255,255,0.55);font-size:16px;">Drop this into any existing web application — Angular, React, Vue, plain HTML.<br>No npm install. No framework dependency. No application rebuild.</div>
+    </div>
+  </div>
+
+  <!-- ═══ SLIDE 4: BUSINESS VALUE ═══ -->
+  <div class="slide s-light">
+    <div class="slide-title">Business Value</div>
+    <h2>Measurable Impact Across Every Team</h2>
+    <div class="two-col">
+      <div>
+        <div class="metrics" style="flex-direction:column;gap:14px;">
+          <div class="metric" style="background:#E3F2FD;text-align:left;padding:18px 20px;display:flex;gap:16px;align-items:center;border-radius:10px;">
+            <div style="font-size:36px;">⚡</div>
+            <div>
+              <div style="font-size:22px;font-weight:800;color:#0D47A1;">Faster Onboarding</div>
+              <div style="font-size:13px;color:#546E8A;margin-top:4px;">New team members reach self-sufficiency without burdening senior engineers with repetitive questions</div>
+            </div>
+          </div>
+          <div class="metric" style="background:#E8F5E9;text-align:left;padding:18px 20px;display:flex;gap:16px;align-items:center;border-radius:10px;">
+            <div style="font-size:36px;">🔍</div>
+            <div>
+              <div style="font-size:22px;font-weight:800;color:#2E7D32;">Data Democratization</div>
+              <div style="font-size:13px;color:#546E8A;margin-top:4px;">Business stakeholders query operational data conversationally — no SQL, no waiting for engineering</div>
+            </div>
+          </div>
+          <div class="metric" style="background:#FFF8E1;text-align:left;padding:18px 20px;display:flex;gap:16px;align-items:center;border-radius:10px;">
+            <div style="font-size:36px;">🚨</div>
+            <div>
+              <div style="font-size:22px;font-weight:800;color:#E65100;">Faster Incident Response</div>
+              <div style="font-size:13px;color:#546E8A;margin-top:4px;">During outages, operational context available conversationally — SLA status, active events, health scores in seconds</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="card light" style="margin-bottom:16px;">
+          <div class="icon">🔌</div>
+          <div class="ctitle">Works in Any Existing App</div>
+          <div class="cdesc">One script tag embeds the chatbot into any application already running. Zero rebuild required. Each team owns their integration.</div>
+        </div>
+        <div class="card light" style="margin-bottom:16px;">
+          <div class="icon">🔒</div>
+          <div class="ctitle">Data Stays in GCP</div>
+          <div class="cdesc">Nothing leaves your security perimeter. All processing happens within your GCP project. No data sent to third-party services.</div>
+        </div>
+        <div class="card light">
+          <div class="icon">🔄</div>
+          <div class="ctitle">Always Current</div>
+          <div class="cdesc">Operational data queried live. Jargon dictionary synced nightly. No stale dashboards. No manual updates.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ SLIDE 5: ARCHITECTURE OVERVIEW ═══ -->
+  <div class="slide s-dark">
+    <div class="slide-title">System Architecture</div>
+    <h2>Five Layers, Fully on Google Cloud</h2>
+    <div class="arch">
+      <div class="arch-row">
+        <div class="arch-box" style="border-color:rgba(66,165,245,0.4);background:rgba(66,165,245,0.08);">
+          <div class="at" style="color:#42A5F5;">🌐 Web Widget — Vanilla JavaScript</div>
+          <div class="as" style="color:rgba(255,255,255,0.5);">Single &lt;script&gt; tag · Zero dependencies · Embeds in any web app · Configurable theme & title · Mobile responsive</div>
+        </div>
+      </div>
+      <div style="text-align:center;color:rgba(255,255,255,0.25);font-size:18px;margin:2px 0;">▼ HTTPS POST /api/chat</div>
+      <div class="arch-row">
+        <div class="arch-box" style="border-color:rgba(0,137,123,0.5);background:rgba(0,137,123,0.1);">
+          <div class="at" style="color:#4DB6AC;">☕ Chatbot API — Spring Boot · Cloud Run</div>
+          <div class="as" style="color:rgba(255,255,255,0.5);">Orchestrates: fetches MCP context → builds RAG prompt → calls Vertex AI · GCP service account auth (ADC)</div>
+        </div>
+      </div>
+      <div style="display:flex;margin:2px 0;gap:4px;justify-content:center;">
+        <div style="flex:1;text-align:center;color:rgba(255,255,255,0.25);font-size:14px;">▼ HTTP internal</div>
+        <div style="flex:1;text-align:center;color:rgba(255,255,255,0.25);font-size:14px;">▼ gRPC</div>
+      </div>
+      <div class="arch-row">
+        <div class="arch-box" style="border-color:rgba(255,193,7,0.4);background:rgba(255,193,7,0.08);">
+          <div class="at" style="color:#FFD54F;">🔧 MCP Server — Node.js · Cloud Run</div>
+          <div class="as" style="color:rgba(255,255,255,0.5);">10 tools: query_postgres, lookup_jargon, get_entity_summary, get_kpi_report, get_sla_status, get_active_events…</div>
+        </div>
+        <div class="arch-box" style="border-color:rgba(103,58,183,0.4);background:rgba(103,58,183,0.08);">
+          <div class="at" style="color:#CE93D8;">🧠 Vertex AI — Gemini 1.5 Flash</div>
+          <div class="as" style="color:rgba(255,255,255,0.5);">RAG Corpus: text-embedding-004 · Nightly sync from PostgreSQL · Temperature 0.2 for factual answers</div>
+        </div>
+      </div>
+      <div style="display:flex;margin:2px 0;gap:4px;">
+        <div style="flex:1;text-align:center;color:rgba(255,255,255,0.25);font-size:14px;">▼ Direct SQL (read-only)</div>
+        <div style="flex:1;text-align:center;color:rgba(255,255,255,0.25);font-size:14px;">▼ HTTP internal (API key / no-auth)</div>
+      </div>
+      <div class="arch-row">
+        <div class="arch-box" style="border-color:rgba(230,81,0,0.4);background:rgba(230,81,0,0.08);">
+          <div class="at" style="color:#FFAB76;">🗄️ Cloud SQL — PostgreSQL</div>
+          <div class="as" style="color:rgba(255,255,255,0.5);">jargon_dictionary · entities · entity_metrics · events · Read-only user — zero mutation risk</div>
+        </div>
+        <div class="arch-box" style="border-color:rgba(46,125,50,0.4);background:rgba(46,125,50,0.08);">
+          <div class="at" style="color:#81C784;">☕ Business Data API — Spring Boot · Cloud Run</div>
+          <div class="as" style="color:rgba(255,255,255,0.5);">Health scores · SLA breach risk · KPI aggregation · Business logic in Java — testable, reviewable</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ SLIDE 6: THE THREE PILLARS ═══ -->
+  <div class="slide s-dark">
+    <div class="slide-title">Core Technology</div>
+    <h2>Three Concepts That Power Everything</h2>
+    <div class="cards cols-3">
+      <div class="card" style="border-color:rgba(66,165,245,0.3);background:rgba(26,115,232,0.08);">
+        <div class="icon">🧠</div>
+        <div class="ctitle" style="color:#42A5F5;">Vertex AI (Gemini)</div>
+        <div class="cdesc">Google's managed AI platform. You rent the brain — Gemini reads and generates human language. You pay per request. We use temperature 0.2: factual, never creative.</div>
+        <div class="cbadge">Managed · Pay-per-use</div>
+      </div>
+      <div class="card" style="border-color:rgba(255,193,7,0.3);background:rgba(255,193,7,0.06);">
+        <div class="icon">📚</div>
+        <div class="ctitle" style="color:#FFD54F;">RAG</div>
+        <div class="cdesc">Retrieval Augmented Generation. First retrieve context from YOUR data, then feed it to the AI. Without RAG: generic answers. With RAG: answers about YOUR organization.</div>
+        <div class="cbadge" style="background:rgba(255,193,7,0.15);color:#FFD54F;">Anti-hallucination · Grounded</div>
+      </div>
+      <div class="card" style="border-color:rgba(0,137,123,0.3);background:rgba(0,137,123,0.08);">
+        <div class="icon">🔌</div>
+        <div class="ctitle" style="color:#4DB6AC;">MCP Server</div>
+        <div class="cdesc">Model Context Protocol — open standard by Anthropic. Universal adapter between AI and your data. The AI calls your tools like functions. Model-agnostic: Gemini, Claude, GPT-4 all work.</div>
+        <div class="cbadge" style="background:rgba(0,137,123,0.15);color:#4DB6AC;">Open standard · Model-agnostic</div>
+      </div>
+    </div>
+    <div class="quote-box" style="margin-top:20px;">
+      <p>"MCP is to AI tools what REST was to web services — a standardization that lets everything connect."</p>
+    </div>
+  </div>
+
+  <!-- ═══ SLIDE 7: DATA FLOW ═══ -->
+  <div class="slide s-dark">
+    <div class="slide-title">Request Flow</div>
+    <h2>What Happens When You Ask a Question</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <div class="st">User types: "Which entities have SLA issues?"</div>
+          <div class="sd">Widget sends POST /api/chat → Chatbot API (Spring Boot on Cloud Run)</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <div class="st">Chatbot API calls MCP tools to fetch context</div>
+          <div class="sd">Calls: get_jargon_dictionary() + get_sla_status() via MCP Server</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <div class="st">MCP Server routes get_sla_status() → Business Data API</div>
+          <div class="sd">Spring Boot computes compliance %  breach risk score, and recommendations using domain logic</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-content">
+          <div class="st">Chatbot API builds RAG-enhanced prompt</div>
+          <div class="sd">[Jargon Dictionary] + [Live SLA Data] + [User Question] = augmented prompt</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-content">
+          <div class="st">Vertex AI (Gemini 1.5 Flash) generates grounded answer</div>
+          <div class="sd">Temp 0.2 · System: "Only answer from provided context" · Max 1024 tokens</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-content">
+          <div class="st">Answer returns to widget — live operational insight in conversational form</div>
+          <div class="sd">"Beta Platform (ENT-002) is BREACHED at 98.5% uptime vs 99.9% threshold. Recommend: immediate escalation."</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ SLIDE 8: JARGON DICTIONARY ═══ -->
+  <div class="slide s-light">
+    <div class="slide-title">Feature Highlight</div>
+    <h2>Live Jargon Dictionary — Maintained in Your Database</h2>
+    <div class="two-col wide">
+      <div>
+        <p style="color:#546E8A;margin-bottom:16px;font-size:14px;">20+ terms seeded. Add unlimited entries without touching code. AI picks up new terms within 24 hours via nightly sync.</p>
+        <table class="dtable">
+          <tr><th>Term</th><th>Full Form</th><th>Domain</th></tr>
+          <tr><td><strong>SLA</strong></td><td>Service Level Agreement</td><td>Operations</td></tr>
+          <tr><td><strong>KPI</strong></td><td>Key Performance Indicator</td><td>Business</td></tr>
+          <tr><td><strong>MTTR</strong></td><td>Mean Time To Recover</td><td>Operations</td></tr>
+          <tr><td><strong>RBAC</strong></td><td>Role-Based Access Control</td><td>Security</td></tr>
+          <tr><td><strong>MCP</strong></td><td>Model Context Protocol</td><td>AI</td></tr>
+          <tr><td><strong>RAG</strong></td><td>Retrieval Augmented Generation</td><td>AI</td></tr>
+          <tr><td><strong>DR</strong></td><td>Disaster Recovery</td><td>Operations</td></tr>
+          <tr><td><strong>ETL</strong></td><td>Extract Transform Load</td><td>Data</td></tr>
+        </table>
+      </div>
+      <div>
+        <div style="background:#0D1117;border-radius:12px;padding:20px;border:1px solid rgba(26,115,232,0.3);">
+          <div style="font-size:11px;color:#42A5F5;letter-spacing:2px;margin-bottom:12px;font-weight:700;">EXAMPLE INTERACTION</div>
+          <div style="background:rgba(26,115,232,0.15);border-radius:8px;padding:12px;margin-bottom:10px;font-size:13px;color:#D4D4D4;font-style:italic;">
+            "What does MTTR mean and how does it relate to our SLA?"
+          </div>
+          <div style="background:rgba(255,255,255,0.05);border-radius:8px;padding:12px;font-size:13px;color:#D4D4D4;line-height:1.6;">
+            <strong style="color:#42A5F5;">AI:</strong> MTTR stands for <em>Mean Time To Recover</em> — the average time to restore a service after a failure. In our context, it directly impacts SLA (Service Level Agreement) compliance: if MTTR exceeds your recovery time commitment, you risk an SLA breach. Our current P1 SLA target requires MTTR under 2 hours.
+          </div>
+        </div>
+        <div style="background:#E3F2FD;border-radius:10px;padding:14px 16px;margin-top:14px;border-left:4px solid #1A73E8;">
+          <div style="font-size:12px;color:#0D47A1;font-weight:700;margin-bottom:4px;">HOW IT STAYS CURRENT</div>
+          <div style="font-size:12px;color:#546E8A;">Update jargon_dictionary table → Cloud Scheduler runs sync at 11 PM → RAG corpus updated → AI knows by morning</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ SLIDE 9: SECURITY ═══ -->
+  <div class="slide s-dark">
+    <div class="slide-title">Security Design</div>
+    <h2>Defense in Depth — Every Layer Protected</h2>
+    <div class="cards cols-2">
+      <div class="card">
+        <div class="icon">👤</div>
+        <div class="ctitle">Least-Privilege Service Accounts</div>
+        <div class="cdesc">4 separate service accounts — each with only the permissions it needs. MCP Server gets read-only DB access. Chat API gets only Vertex AI + Secret Manager.</div>
+        <div class="cbadge">Cloud IAM</div>
+      </div>
+      <div class="card">
+        <div class="icon">🔒</div>
+        <div class="ctitle">Read-Only Database User</div>
+        <div class="cdesc">PostgreSQL user `app_readonly` cannot INSERT, UPDATE, or DELETE. Even if the MCP Server were compromised, data cannot be mutated. Defense in depth.</div>
+        <div class="cbadge">PostgreSQL · Zero mutation risk</div>
+      </div>
+      <div class="card">
+        <div class="icon">🏠</div>
+        <div class="ctitle">Internal-Only Cloud Run</div>
+        <div class="cdesc">MCP Server and Business Data API deployed with `--ingress internal`. No public internet access. Only services within the same VPC can reach them.</div>
+        <div class="cbadge">--no-allow-unauthenticated</div>
+      </div>
+      <div class="card">
+        <div class="icon">🗝️</div>
+        <div class="ctitle">Secret Manager for All Credentials</div>
+        <div class="cdesc">DB passwords and API keys in GCP Secret Manager — never in environment variables, never in code, never in Docker images. Fetched at startup only.</div>
+        <div class="cbadge">Secret Manager · No hardcoded secrets</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ SLIDE 10: MCP OPTIONS ═══ -->
+  <div class="slide s-light">
+    <div class="slide-title">Architecture Decision</div>
+    <h2>Two MCP Integration Paths — Both Implemented</h2>
+    <div class="cards cols-2">
+      <div class="card light" style="border-top:4px solid #1A73E8;">
+        <div class="ctitle">✅ Option A — Recommended (main branch)</div>
+        <div class="cdesc" style="margin-bottom:14px;">MCP Server (Node.js) calls Spring Boot Business Data API via HTTP REST. Spring Boot stays a standard REST API — no protocol changes.</div>
+        <div style="font-size:12px;color:#546E8A;line-height:1.8;">
+          <div>→ AI calls MCP tool</div>
+          <div>→ MCP Node.js makes HTTP GET/POST</div>
+          <div>→ Spring Boot applies business logic</div>
+          <div>→ Returns JSON to MCP → AI</div>
+        </div>
+        <div style="margin-top:12px;">
+          <span class="pill" style="background:#E3F2FD;color:#1565C0;">Lower complexity</span>
+          <span class="pill" style="background:#E8F5E9;color:#2E7D32;margin-left:6px;">API reusable</span>
+        </div>
+      </div>
+      <div class="card light" style="border-top:4px solid #6A1B9A;">
+        <div class="ctitle" style="color:#6A1B9A;">⚡ Option B — Advanced (feature branch)</div>
+        <div class="cdesc" style="margin-bottom:14px;">Spring Boot exposes a /mcp SSE endpoint that speaks MCP protocol directly (JSON-RPC 2.0). Eliminates the Node.js layer for business data.</div>
+        <div style="font-size:12px;color:#546E8A;line-height:1.8;">
+          <div>→ AI connects to /mcp endpoint</div>
+          <div>→ Spring Boot handles MCP handshake</div>
+          <div>→ Tools registered via McpSyncServer</div>
+          <div>→ No Node.js involvement</div>
+        </div>
+        <div style="margin-top:12px;">
+          <span class="pill" style="background:#EDE7F6;color:#4A148C;">Java-native</span>
+          <span class="pill" style="background:#FFF3E0;color:#E65100;margin-left:6px;">Higher complexity</span>
+        </div>
+      </div>
+    </div>
+    <div style="background:#E8F5E9;border-radius:10px;padding:14px 18px;margin-top:16px;border-left:4px solid #2E7D32;">
+      <strong style="color:#1B5E20;font-size:13px;">Both options produce identical AI output.</strong>
+      <span style="color:#2E7D32;font-size:13px;"> The AI never knows which path was used. Switch: <code style="background:#C8E6C9;padding:2px 6px;border-radius:4px;">git checkout feature/option-b-mcp</code></span>
+    </div>
+  </div>
+
+  <!-- ═══ SLIDE 11: GCP SERVICES ═══ -->
+  <div class="slide s-light">
+    <div class="slide-title">Infrastructure</div>
+    <h2>Fully Managed — Zero Server to Maintain</h2>
+    <div class="cards cols-4">
+      <div class="card light">
+        <div class="icon">☁️</div>
+        <div class="ctitle">Cloud Run</div>
+        <div class="cdesc">Serverless containers. Auto-scales to zero. Pay only when requests arrive.</div>
+      </div>
+      <div class="card light">
+        <div class="icon">🗄️</div>
+        <div class="ctitle">Cloud SQL</div>
+        <div class="cdesc">Managed PostgreSQL. Your existing database. Connect via private socket.</div>
+      </div>
+      <div class="card light">
+        <div class="icon">🧠</div>
+        <div class="ctitle">Vertex AI</div>
+        <div class="cdesc">Gemini LLM + RAG corpus. text-embedding-004 for vector search.</div>
+      </div>
+      <div class="card light">
+        <div class="icon">🔑</div>
+        <div class="ctitle">Secret Manager</div>
+        <div class="cdesc">Credentials fetched at startup. Never in env vars or code.</div>
+      </div>
+      <div class="card light">
+        <div class="icon">🏗️</div>
+        <div class="ctitle">Cloud Build</div>
+        <div class="cdesc">CI/CD pipeline. Build and deploy on git push. Free tier.</div>
+      </div>
+      <div class="card light">
+        <div class="icon">⏰</div>
+        <div class="ctitle">Cloud Scheduler</div>
+        <div class="cdesc">Triggers nightly RAG sync at 11 PM. Cron-based, fully managed.</div>
+      </div>
+      <div class="card light">
+        <div class="icon">📦</div>
+        <div class="ctitle">Artifact Registry</div>
+        <div class="cdesc">Docker image storage. GCP-native, replaces Docker Hub.</div>
+      </div>
+      <div class="card light">
+        <div class="icon">📋</div>
+        <div class="ctitle">Cloud Logging</div>
+        <div class="cdesc">All services write logs centrally. One place to debug everything.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ SLIDE 12: ROADMAP ═══ -->
+  <div class="slide s-dark">
+    <div class="slide-title">Roadmap</div>
+    <h2>What's Built. What's Next.</h2>
+    <div class="cards cols-3">
+      <div class="card" style="border-top:3px solid #42A5F5;">
+        <div class="ctitle" style="color:#42A5F5;">✅ Phase 1 — Shipped</div>
+        <div class="cdesc" style="margin-top:10px;line-height:2;">
+          ✓ MCP Server (10 tools)<br>
+          ✓ Business Data API with logic<br>
+          ✓ Vertex AI + Gemini integration<br>
+          ✓ RAG corpus + nightly sync<br>
+          ✓ Embeddable web widget<br>
+          ✓ GCP deployment automation<br>
+          ✓ Option A + B MCP paths
+        </div>
+      </div>
+      <div class="card" style="border-top:3px solid #FFD54F;">
+        <div class="ctitle" style="color:#FFD54F;">🔄 Phase 2 — Enhancing</div>
+        <div class="cdesc" style="margin-top:10px;line-height:2;">
+          → Streaming responses (SSE)<br>
+          → Conversation memory (Firestore)<br>
+          → Feedback loop (BigQuery)<br>
+          → Multi-corpus RAG<br>
+          &nbsp;&nbsp;&nbsp;(Confluence, Jira, runbooks)<br>
+          → Response quality analytics
+        </div>
+      </div>
+      <div class="card" style="border-top:3px solid #81C784;">
+        <div class="ctitle" style="color:#81C784;">🚀 Phase 3 — Enterprise</div>
+        <div class="cdesc" style="margin-top:10px;line-height:2;">
+          → OAuth2/OIDC widget auth<br>
+          &nbsp;&nbsp;&nbsp;(GCP Identity-Aware Proxy)<br>
+          → Analytics dashboard<br>
+          &nbsp;&nbsp;&nbsp;(Cloud Logging + Looker)<br>
+          → Write tools + approval gates<br>
+          &nbsp;&nbsp;&nbsp;(create Jira tickets from chat)<br>
+          → Multi-language support
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ SLIDE 13: THE ASK ═══ -->
+  <div class="slide s-light">
+    <div class="slide-title">Next Steps</div>
+    <h2>Three Things We Can Do This Week</h2>
+    <div class="cards cols-3" style="margin-bottom:20px;">
+      <div class="card light" style="border-top:4px solid #1A73E8;">
+        <div class="icon">1️⃣</div>
+        <div class="ctitle">Embed in One App</div>
+        <div class="cdesc">Pick one existing internal application. Add the single script tag. The chatbot is live within the same day — no rebuild, no deployment changes.</div>
+        <div class="cbadge">Same day · Zero risk</div>
+      </div>
+      <div class="card light" style="border-top:4px solid #00897B;">
+        <div class="icon">2️⃣</div>
+        <div class="ctitle">Expand the Dictionary</div>
+        <div class="cdesc">Each team submits their domain-specific acronyms. We add them to the jargon_dictionary table. AI picks them up overnight. No engineering work per addition.</div>
+        <div class="cbadge">Invite all teams · Self-service</div>
+      </div>
+      <div class="card light" style="border-top:4px solid #6A1B9A;">
+        <div class="icon">3️⃣</div>
+        <div class="ctitle">Add a Business Data Source</div>
+        <div class="cdesc">Name the one operational question your team asks most often. We can build that as a new MCP tool connected to your real data within a sprint.</div>
+        <div class="cbadge">One sprint · High impact</div>
+      </div>
+    </div>
+    <div style="background:#F0F5FF;border-radius:12px;padding:18px 22px;border:1px solid #C5D8FF;display:flex;gap:16px;align-items:center;">
+      <div style="font-size:36px;">🔗</div>
+      <div>
+        <div style="font-weight:700;color:#0D47A1;margin-bottom:4px;">Repository: github.com/mehtaniravm/MCP-Vertex-RAG-Java-Springboot-Chatbot</div>
+        <div style="font-size:13px;color:#546E8A;">All code, documentation, setup guides, and demo examples are public. Open to any team that wants to review or contribute.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ SLIDE 14: CONCLUSION ═══ -->
+  <div class="slide s-conclusion">
+    <div class="star-bg"></div>
+    <div class="cover-glow"></div>
+    <div style="position:relative;z-index:1;text-align:center;padding:48px;">
+      <div style="font-size:14px;letter-spacing:3px;color:#42A5F5;font-weight:700;text-transform:uppercase;margin-bottom:24px;">Thank You</div>
+      <h1 style="font-size:clamp(28px,4vw,50px);font-weight:800;color:#fff;max-width:800px;margin:0 auto 20px;line-height:1.2;">
+        The Knowledge of Our Organization,<br>
+        <span style="color:#42A5F5;">Accessible to Everyone.</span>
+      </h1>
+      <div style="color:rgba(255,255,255,0.5);font-size:16px;max-width:600px;margin:0 auto 40px;line-height:1.7;">
+        One script tag. Any existing application. Live data. Grounded answers. Zero hallucination.
+      </div>
+      <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-bottom:40px;">
+        <div style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);border-radius:10px;padding:14px 24px;min-width:160px;">
+          <div style="font-size:28px;font-weight:900;color:#42A5F5;">10</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-top:2px;">MCP Tools</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);border-radius:10px;padding:14px 24px;min-width:160px;">
+          <div style="font-size:28px;font-weight:900;color:#FFD54F;">5</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-top:2px;">GCP Services</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);border-radius:10px;padding:14px 24px;min-width:160px;">
+          <div style="font-size:28px;font-weight:900;color:#4DB6AC;">1</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-top:2px;">Script Tag</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);border-radius:10px;padding:14px 24px;min-width:160px;">
+          <div style="font-size:28px;font-weight:900;color:#81C784;">0</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-top:2px;">Hallucinations</div>
+        </div>
+      </div>
+      <div style="font-size:15px;color:rgba(255,255,255,0.3);font-style:italic;">Designed by Curiosity. Built by Discipline. Delivered by Nirav Mehta.</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Navigation -->
+<div class="nav">
+  <button onclick="prev()">← Prev</button>
+  <span class="counter" id="counter">1 / 14</span>
+  <button onclick="next()">Next →</button>
+</div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const total  = slides.length;
+  let current  = 0;
+
+  function show(n) {
+    slides[current].classList.remove('active');
+    current = (n + total) % total;
+    slides[current].classList.add('active');
+    document.getElementById('counter').textContent = (current+1) + ' / ' + total;
+    document.getElementById('progress').style.width = ((current+1)/total*100) + '%';
+  }
+  function next() { show(current + 1); }
+  function prev() { show(current - 1); }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') { e.preventDefault(); next(); }
+    if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')                    { e.preventDefault(); prev(); }
+  });
+  show(0);
+</script>
+</body>
+</html>
