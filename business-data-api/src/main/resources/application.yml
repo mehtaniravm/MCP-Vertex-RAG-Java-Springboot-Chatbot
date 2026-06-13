@@ -44,3 +44,7 @@ logging:
     com.company.bizapi: INFO
     com.google.cloud: WARN
     root: INFO
+
+app:
+  mcp:
+    enabled: ${ENABLE_MCP_ENDPOINT:false}   # set true for Option B MCP endpoint
