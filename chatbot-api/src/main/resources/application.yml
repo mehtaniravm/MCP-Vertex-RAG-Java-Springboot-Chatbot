@@ -1,0 +1,26 @@
+spring:
+  application:
+    name: chatbot-api
+
+server:
+  port: 8080
+  shutdown: graceful
+
+gcp:
+  project-id: ${GCP_PROJECT_ID}
+  region: ${GCP_REGION:us-central1}
+
+vertex:
+  model: ${VERTEX_MODEL:gemini-1.5-flash}
+  rag-corpus: ${RAG_CORPUS_NAME:}
+  temperature: 0.2
+  max-output-tokens: 1024
+
+mcp:
+  server-url: ${MCP_SERVER_URL:http://localhost:3000}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

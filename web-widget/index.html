@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Chatbot Widget — Demo</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 800px; margin: 80px auto; padding: 0 24px; color: #333; }
+    h1   { color: #1A73E8; }
+    code { background: #f1f3f4; padding: 2px 8px; border-radius: 4px; font-size: 13px; }
+    pre  { background: #1e1e1e; color: #d4d4d4; padding: 16px; border-radius: 8px; overflow-x: auto; }
+  </style>
+</head>
+<body>
+  <h1>AI Chatbot Widget — Demo Page</h1>
+  <p>This page demonstrates the embeddable chatbot widget. Click the 💬 button in the bottom-right corner.</p>
+
+  <h2>How to embed in any app</h2>
+  <pre><code>&lt;script
+  src="chatbot-widget.js"
+  data-api-url="https://your-chatbot-api.run.app/api/chat"
+  data-title="AI Assistant"
+  data-theme="#1A73E8"
+  defer
+&gt;&lt;/script&gt;</code></pre>
+
+  <h2>Sample questions to try</h2>
+  <ul>
+    <li>What does SLA mean?</li>
+    <li>Show me active critical events</li>
+    <li>What is the KPI report for this month?</li>
+    <li>Explain RBAC in our system context</li>
+    <li>What entities have SLA breaches?</li>
+  </ul>
+
+  <!-- Widget embed — update data-api-url to your deployed API -->
+  <script
+    src="chatbot-widget.js"
+    data-api-url="http://localhost:8080/api/chat"
+    data-title="AI Assistant"
+    data-theme="#1A73E8"
+    defer
+  ></script>
+</body>
+</html>

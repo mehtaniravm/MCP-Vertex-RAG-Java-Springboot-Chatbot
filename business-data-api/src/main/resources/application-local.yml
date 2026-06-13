@@ -1,0 +1,9 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/${DB_NAME:app_db}
+    username: ${DB_USER:app_user}
+    password: ${DB_PASS:localpassword}
+
+app:
+  security:
+    api-key-enabled: false   # disable for local dev

@@ -1,0 +1,46 @@
+spring:
+  application:
+    name: business-data-api
+
+  datasource:
+    url: jdbc:postgresql:///${DB_NAME:app_db}?cloudSqlInstance=${CLOUD_SQL_CONNECTION_NAME:}&socketFactory=com.google.cloud.sql.postgres.SocketFactory
+    username: ${DB_USER:app_user}
+    # password injected at startup from Secret Manager — see DataSourceConfig
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 1
+      connection-timeout: 5000
+      idle-timeout: 30000
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+    open-in-view: false
+
+server:
+  port: 8080
+  shutdown: graceful
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+
+app:
+  security:
+    api-key-enabled: ${API_KEY_ENABLED:true}
+    api-key-header: X-API-Key
+    api-key-secret-name: ${API_KEY_SECRET_NAME:biz-api-key}
+
+gcp:
+  project-id: ${GCP_PROJECT_ID:}
+
+logging:
+  level:
+    com.company.bizapi: INFO
+    com.google.cloud: WARN
+    root: INFO
